@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>js  to pdf(table)</title>
+</head>
+<body>
+    <script>
+        PDF EXPORT
+
+
+first import "jspdf" and "jspdf-autotable"
+
+then within the function declare "const doc = new jsPDF()"
+
+
+*To create table ithuthan mukkiyam. "doc.autoTable({})"
+ 
+*doc.autoTable({
+	theme:grid, // grid=>normal table, striped=>black and white compination la varum. 		
+	head: [],
+	body: [ [],[],],
+	startY: 40,
+                headStyle:{},
+                bodyStyle:{}
+	});
+
+*theme:grid enbathu table create pannanum sollum.
+*both head and body property needs array of arrays. like, head:[["name"],["age"]] (or) ["name","age"]
+                                                                                      body:[["karthi","22"],["david","26"]]
+
+*where startY is  page top la irunthu evolo thoorathil start pannanum sollum.
+* ithula style add panna headStyle and bodyStyle use pannalam
+   like, headStyle :{
+                         fontStyle: 'bold',
+	         fontSize: 10,
+	         textColor: '#000',
+	         cellPadding: 1,
+	         cellWidth: 'wrap',   ==> ingae cell width, we can give "10,20,30" or "wrap" or "auto"
+	         halign: 'left' ==> halign enbathu horizontal align. ithae maari "valign" enbathu vertical align.
+                         lineWidth: 0.2, enbathu border width. if it is '0' thers is no border.
+},
+
+* last ah download panna "doc.save("file name.pdf")" nu kodukkanum.
+
+<====Exmaple below=====>
+<button onClick={exportPDF} className="export-btn">
+const exportPDF = () => {
+		const doc = new jsPDF();
+
+		const vesdetailStyles = {
+			fontStyle: 'bold',
+			fontSize: 10,
+			textColor: '#000',
+			cellPadding: 1,
+			cellWidth: 'wrap',
+			halign: 'left'
+		};
+		const tbbodyStyles = {
+			fontStyle: 'bold',
+			fontSize: 10,
+			textColor: '#000',
+			cellPadding: 1,
+			cellWidth: 20,
+			halign: 'left'
+		};
+		const bodyStyles = {
+			textColor: '#000',
+			lineColor: '#000',
+			lineWidth: 0.2,
+			cellWidth: 45,
+		};
+		doc.setFontSize(12);
+		doc.text('TIER WEIGHTS', 90, 30);
+		const today = new Date();
+		const yyyy = today.getFullYear();
+		let mm = today.getMonth() + 1;
+		let dd = today.getDate();
+
+		doc.autoTable({
+			styles: {
+				lineWidth: 0
+			},
+			theme: 'grid',
+			columnStyles: { 0: { cellWidth: 25 }, 2: { cellWidth: 42 }, 3: { cellWidth: 20 } },
+			head: [],
+			body: [
+				['Vessel', `: ${vessel}`, '', 'Date', `: ${dd}/${mm}/${yyyy}`],
+				['VesselName', `: ${vesselname}`, '', 'Port', `: ${port}`],
+				['Voyage', `: ${voyage}`, '', 'Terminal', `: ${terminal}`],
+				['Service', `: ${service}`, '', 'Bound', `: ${bound}`]
+			],
+			startY: 40,
+			bodyStyles: vesdetailStyles
+		});
+
+		doc.line(10, 68, 200, 68);
+		let tiers = _.map(rowData, _.property('Tiers'));
+		_.pull(tiers, 'empty');
+
+		// function for get row data
+		const getBody = tbno => {
+			let body = [['TIERS', 'WEIGHT']];
+			let Deepbody = [];
+			tiers.forEach(t1 => {
+				let a = _.find(rowData, { Tiers: t1 });
+				body.push([t1, a[tbno] ? a[tbno] : 0]);
+			});
+			Deepbody = _.cloneDeep(body);
+			body.splice(1);
+			return Deepbody;
+		};
+
+		// loop through all bays
+		for (let i = 1; i <=tb.size; i++) {
+			let header = _.find(colDef, { field: `${i}` });
+			doc.autoTable({
+				styles: {
+					lineWidth: 0
+				},
+				theme: 'grid',
+				head: [],
+				body: [['BAYS', header['headerName']]],
+				bodyStyles: tbbodyStyles
+			});
+
+			doc.autoTable({
+				theme: 'grid',
+				head: [],
+				body: getBody(i),
+				didParseCell: data => {
+					if (
+						data.row.raw.includes('WEIGHT') ||
+						data.row.raw.includes('DECK') ||
+						data.row.raw.includes('HOLD') ||
+						data.row.raw.includes('TOTAL')
+					) {
+						data.cell.styles.fontStyle = 'bold';
+					}
+				},
+				bodyStyles: bodyStyles
+			});
+		}
+		
+		doc.save('Weight Statistics.pdf');
+	}
+
+
+ 
+    </script>
+    
+</body>
+</html>
